@@ -24,10 +24,24 @@ import unalcol.search.selection.Selection;
 import unalcol.search.selection.Tournament;
 import unalcol.search.space.Space;
 
+import java.awt.image.AreaAveragingScaleFilter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Main {
+    private static final int ID = 0, ARGS = 1;
+
+    public static int getType(String element) {
+        if(element.matches("[0-9]+")) return EquationSystem.INTEGER;
+        else if(element.matches("false|true")) return EquationSystem.BOOLEAN;
+        else if(element.startsWith("[")) return EquationSystem.LIST;
+        return -1;
+    }
+
     public static void main(String[] args) {
         String[][] examples = {
-                {"geq(0,1)", "false"},
+                {"geq([1, 2, 3],1)", "false"},
                 {"geq(0,0)", "true"},
                 {"geq(1,0)", "true"},
                 {"geq(1,1)", "true"},
@@ -38,7 +52,7 @@ public class Main {
                 {"geq(3,3)", "true"}
         };
 
-        String[][] examples1 = {
+        /*String[][] examples1 = {
                 {"geq(1,1)", "2"},
                 {"geq(3,5)", "8"},
                 {"geq(10, 1)", "11"},
@@ -48,19 +62,50 @@ public class Main {
                 {"geq(7,5)", "12"},
                 {"geq(12,2)", "14"},
                 {"geq(3,3)", "6"}
-        };
+        };*/
 
-        String[] functor = {"geq", "s"};
-        int[] arityFun = {2, 1};
-        String[] variables = {"X", "Y", "Z", "A", "B"};
-        String[] terminals = {"0", "true", "false"};
+        String a = examples[0][0];
+        a = a.replace(")", "");
+        a = a.replace(" ", "");
+        String splitted[] = a.split("\\(");
+
+        String toDeduce = splitted[0];
+
+        // available functions to use
+        String[] functionsName = {toDeduce, "s"};
+        Integer[] functionsRetType = {getType(examples[0][1]), EquationSystem.INTEGER};
+
+        String[] arguments = splitted[1].split(",(?![^(\\[\\])]*\\])", -1);
+
+        Map<String, Integer[]> arityFun = new HashMap<>();
+        arityFun.put("s", new Integer[]{EquationSystem.INTEGER});
+
+        Integer[] argTypes = new Integer[arguments.length];
+        for(int i = 0 ; i < arguments.length; ++i) {
+            argTypes[i] = getType(arguments[i]);
+        }
+        arityFun.put(toDeduce, argTypes);
+
+        String[] variables = new String[arguments.length];
+        for(int i = 0; i < variables.length; ++i) {
+            variables[i] = "" + (char)('D' + i);
+        }
+
+        System.out.println(Arrays.toString(variables));
+
+        String[] listVariables = {"A", "B", "C"};
+        String[] terminals = {"0", "1", "true", "false"};
         int maxEquations = 3;
         int levels = 4;
 
+        EquationSystem eq = new EquationSystem(maxEquations, examples, variables, listVariables, functionsName,
+                                               functionsRetType, arityFun, terminals, levels);
 
+        System.out.println(eq);
 
-        Space<EquationSystem> space = new EquationsSpace(maxEquations, examples, variables, functor,
-                arityFun, terminals, levels);
+/*
+        Space<EquationSystem> space = new EquationsSpace(maxEquations, examples, variables, listVariables,
+                functionsName, functionsRetType, arityFun, terminals, levels);
 
         // Optimization function
         OptimizationFunction<EquationSystem> function = new EquationSystemFitness(examples);
@@ -91,8 +136,6 @@ public class Main {
         Solution<EquationSystem> solution = search.apply(space, goal);
 
         System.out.println(solution.quality());
-        System.out.println(solution.value());
-
-
+        System.out.println(solution.value());*/
     }
 }

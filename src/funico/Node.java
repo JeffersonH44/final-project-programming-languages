@@ -24,9 +24,9 @@ public class Node {
     }
 
     public String getPhenotype() {
-       if(getArity() == Node.TERMINAL) {
+        if(getArity() == Node.TERMINAL) {
            return name;
-       }
+        }
 
         String toRet = name + "(";
         for(int i = 0; i < getArity(); ++i) {

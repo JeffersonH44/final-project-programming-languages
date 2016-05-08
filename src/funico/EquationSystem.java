@@ -1,17 +1,31 @@
 package funico;
 
+import unalcol.random.integer.IntUniform;
+import unalcol.random.util.RandBool;
+
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Stack;
 
-
 public class EquationSystem implements Cloneable {
-    public EquationSystem(int numberOfEquations, String[][] examples, String[] variables, String[] functor,
-                          int[] arityFun, String[] terminals, int levels) {
+
+    public static final int INTEGER = 1;
+    public static final int LIST = 2;
+    public static final int BOOLEAN = 3;
+
+
+    public EquationSystem(int numberOfEquations, String[][] examples, String[] variables, String[] listVariables,
+                          String[] functor, Integer[] functorRetType, Map<String, Integer[]> arityFun,
+                          String[] terminals, int levels) {
         this.syntaxTree = new RandomSyntaxTree[numberOfEquations];
         this.numberOfEquations = numberOfEquations;
 
+        RandBool r = new RandBool(0.0);
+        boolean[] bool = r.generate(numberOfEquations);
+
         for(int i = 0; i < numberOfEquations; ++i) {
-            this.syntaxTree[i] = new RandomSyntaxTree(examples, variables, functor, arityFun, terminals, levels);
+            this.syntaxTree[i] = new RandomSyntaxTree(examples, variables, listVariables, functor, functorRetType,
+                                                      arityFun, terminals, levels, bool[i]);
         }
     }
 
