@@ -48,6 +48,38 @@ public class RandomSyntaxTree {
         }
     }
 
+    private Node generateNode(Integer currentArg, int index) {
+        Vector<Node> terminals = new Vector<>();
+
+        terminals.add(new Node(this.variables[index], Node.TERMINAL));
+        switch (currentArg) {
+            case EquationSystem.BOOLEAN:
+                terminals.add(new Node("false", Node.TERMINAL));
+                terminals.add(new Node("true", Node.TERMINAL));
+                break;
+            case EquationSystem.INTEGER:
+                terminals.add(new Node("1", Node.TERMINAL));
+                terminals.add(new Node("0", Node.TERMINAL));
+                break;
+            case EquationSystem.LIST:
+                terminals.add(new List("", "")); // empty list
+                IntUniform r = new IntUniform(listVariables.length);
+
+                Node chosenVariable = new RandBool(0.5).generate() ? new List("", "") : new Node(listVariables[r.generate()], Node.TERMINAL);
+                terminals.add(new List(new Node(this.variables[index], Node.TERMINAL), chosenVariable)); // with probability of empty list at end
+                break;
+        }
+        IntUniform r1 = new IntUniform(terminals.size());
+        int pos = r1.generate();
+        Node newChildren, currElement = terminals.get(pos);
+        if(currElement instanceof List) {
+            newChildren = new List(currElement.children[0], currElement.children[1]);
+        } else {
+            newChildren = new Node(currElement);
+        }
+        return newChildren;
+    }
+
     private void generateRecursiveTreeEq(Node currentNode, int level) {
         if(level == this.levels - 1) {
             generateBaseTreeEq(currentNode);
@@ -69,35 +101,7 @@ public class RandomSyntaxTree {
                 String functionName = matchedFunctions.get(r.generate());
                 generateRecursiveTreeEq(new Node(functionName, arityFun.get(functionName).length), level + 1);
             } else {
-                Vector<Node> terminals = new Vector<>();
-
-                terminals.add(new Node(this.variables[i], Node.TERMINAL));
-                switch (currentArguments[i]) {
-                    case EquationSystem.BOOLEAN:
-                        terminals.add(new Node("false", Node.TERMINAL));
-                        terminals.add(new Node("true", Node.TERMINAL));
-                        break;
-                    case EquationSystem.INTEGER:
-                        terminals.add(new Node("1", Node.TERMINAL));
-                        terminals.add(new Node("0", Node.TERMINAL));
-                        break;
-                    case EquationSystem.LIST:
-                        terminals.add(new List("", ""));
-                        IntUniform r = new IntUniform(listVariables.length);
-
-                        Node chosenVariable = new RandBool(0.5).generate() ? new List("", "") : new Node(listVariables[r.generate()], Node.TERMINAL);
-                        terminals.add(new List(new Node(this.variables[i], Node.TERMINAL), chosenVariable)); // with probability of empty list at end
-                        break;
-                }
-                IntUniform r1 = new IntUniform(terminals.size());
-                int pos = r1.generate();
-                Node newChildren, currElement = terminals.get(pos);
-                if(currElement instanceof List) {
-                    newChildren = new List(currElement.children[0], currElement.children[1]);
-                } else {
-                    newChildren = new Node(currElement);
-                }
-                currentNode.children[i] = newChildren;
+                currentNode.children[i] = generateNode(currentArguments[i], i);
             }
         }
 
@@ -108,35 +112,7 @@ public class RandomSyntaxTree {
         Integer[] currentArguments = this.arityFun.get(currentFunction);
 
         for(int i = 0; i < currentArguments.length; ++i) {
-            Vector<Node> terminals = new Vector<>();
-
-            terminals.add(new Node(this.variables[i], Node.TERMINAL));
-            switch (currentArguments[i]) {
-                case EquationSystem.BOOLEAN:
-                    terminals.add(new Node("false", Node.TERMINAL));
-                    terminals.add(new Node("true", Node.TERMINAL));
-                    break;
-                case EquationSystem.INTEGER:
-                    terminals.add(new Node("1", Node.TERMINAL));
-                    terminals.add(new Node("0", Node.TERMINAL));
-                    break;
-                case EquationSystem.LIST:
-                    terminals.add(new List("", "")); // empty list
-                    IntUniform r = new IntUniform(listVariables.length);
-
-                    Node chosenVariable = new RandBool(0.5).generate() ? new List("", "") : new Node(listVariables[r.generate()], Node.TERMINAL);
-                    terminals.add(new List(new Node(this.variables[i], Node.TERMINAL), chosenVariable)); // with probability of empty list at end
-                    break;
-            }
-            IntUniform r1 = new IntUniform(terminals.size());
-            int pos = r1.generate();
-            Node newChildren, currElement = terminals.get(pos);
-            if(currElement instanceof List) {
-                newChildren = new List(currElement.children[0], currElement.children[1]);
-            } else {
-                newChildren = new Node(currElement);
-            }
-            currentNode.children[i] = newChildren;
+            currentNode.children[i] = generateNode(currentArguments[i], i);
         }
     }
 

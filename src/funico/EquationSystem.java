@@ -20,7 +20,7 @@ public class EquationSystem implements Cloneable {
         this.syntaxTree = new RandomSyntaxTree[numberOfEquations];
         this.numberOfEquations = numberOfEquations;
 
-        RandBool r = new RandBool(0.0);
+        RandBool r = new RandBool(0.5);
         boolean[] bool = r.generate(numberOfEquations);
 
         for(int i = 0; i < numberOfEquations; ++i) {
