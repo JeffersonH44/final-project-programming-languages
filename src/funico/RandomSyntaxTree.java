@@ -99,7 +99,8 @@ public class RandomSyntaxTree {
             if(matchedFunctions.size() != 0 && new RandBool(0.5).generate()) {
                 IntUniform r = new IntUniform(matchedFunctions.size());
                 String functionName = matchedFunctions.get(r.generate());
-                generateRecursiveTreeEq(new Node(functionName, arityFun.get(functionName).length), level + 1);
+                currentNode.children[i] = new Node(functionName, arityFun.get(functionName).length);
+                generateRecursiveTreeEq(currentNode.children[i], level + 1);
             } else {
                 currentNode.children[i] = generateNode(currentArguments[i], i);
             }
@@ -135,6 +136,11 @@ public class RandomSyntaxTree {
             functions.add(root.children[0]);
             while(!functions.isEmpty()) {
                 Node currentNode = functions.remove();
+                int type = functorRetType[Arrays.asList(functor).indexOf(currentNode.getName())];
+                if(type == EquationSystem.BOOLEAN) booleanElements.add(currentNode);
+                else if(type == EquationSystem.INTEGER) integerElements.add(currentNode);
+                else listElements.add(currentNode);
+
                 Integer[] args = arityFun.get(currentNode.getName());
 
                 for(int i = 0; i < args.length; ++i) {
@@ -143,15 +149,17 @@ public class RandomSyntaxTree {
                     else if(args[i].equals(EquationSystem.INTEGER))
                         integerElements.add(currentNode.children[i]);
                     else if(args[i].equals(EquationSystem.LIST)) {
-                        System.out.println(currentNode.getName());
                         if(currentNode.children[i].getArity() == Node.TERMINAL) { // check if is not a variable containing a hole list
-                            listElements.add(currentNode);
+                            listElements.add(currentNode.children[i]);
                         } else {
-                            if(!currentNode.children[i].children[1].equals("")) // only if is not an empty list
+                            if(!currentNode.children[i].children[1].getName().equals("")) { // only if is not an empty list
                                 listElements.add(currentNode.children[i].children[1]); // second element is the real list
-                            // TODO: boolean or integer list?
-                            integerElements.add(currentNode.children[i]);
-                            booleanElements.add(currentNode.children[i]);
+                                // TODO: boolean or integer list?
+                                integerElements.add(currentNode.children[i]);
+                                booleanElements.add(currentNode.children[i]);
+                            } else {
+                                listElements.add(new List("", ""));
+                            }
                         }
                     }
 
@@ -174,7 +182,7 @@ public class RandomSyntaxTree {
                     root.children[1].children[i] = new Node(integerElements.get(rInteger.generate()));
                 } else { // List case
                     Node currNode  = listElements.get(rList.generate());
-                    if(currNode instanceof List)
+                    if(currNode.getName().equals("list"))
                         root.children[1].children[i] = new List(currNode.children[0], currNode.children[1]);
                     else
                         root.children[1].children[i] = new Node(currNode);
