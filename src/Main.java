@@ -5,9 +5,9 @@
 import funico.EquationSystem;
 import funico.EquationSystemFitness;
 import funico.EquationsSpace;
-import funico.mutation.OperatorSwapMutation;
-import funico.mutation.SuccessorMutation;
-import funico.xover.EquationSwap;
+import funico.RandomSyntaxTree;
+import funico.mutation.EquationSwap;
+import funico.xover.BranchXOver;
 import funico.xover.EquationXOver;
 import unalcol.evolution.haea.HAEA;
 import unalcol.evolution.haea.HaeaOperators;
@@ -18,13 +18,13 @@ import unalcol.search.Goal;
 import unalcol.search.Solution;
 import unalcol.search.population.variation.ArityTwo;
 import unalcol.search.population.variation.Operator;
-import unalcol.search.space.ArityOne;
 import unalcol.search.selection.Elitism;
 import unalcol.search.selection.Selection;
 import unalcol.search.selection.Tournament;
+import unalcol.search.space.ArityOne;
 import unalcol.search.space.Space;
+import unalcol.types.collection.vector.Vector;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class Main {
 
     public static void main(String[] args) {
         String[][] examples = {
-                {"geq([1, 2, 3],1)", "false"},
+                {"geq(0,1)", "false"},
                 {"geq(0,0)", "true"},
                 {"geq(1,0)", "true"},
                 {"geq(1,1)", "true"},
@@ -98,33 +98,30 @@ public class Main {
         int maxEquations = 3;
         int levels = 4;
 
-        EquationSystem eq = new EquationSystem(maxEquations, examples, variables, listVariables, functionsName,
-                                               functionsRetType, arityFun, terminals, levels);
-
-        System.out.println(eq);
-
-/*
         Space<EquationSystem> space = new EquationsSpace(maxEquations, examples, variables, listVariables,
                 functionsName, functionsRetType, arityFun, terminals, levels);
+
+        /*EquationSystem eq = space.get();
+        RandomSyntaxTree tree = eq.getSyntaxTree(0);
+
+        tree.doTest();*/
 
         // Optimization function
         OptimizationFunction<EquationSystem> function = new EquationSystemFitness(examples);
         Goal<EquationSystem> goal = new OptimizationGoal<>(function, false, 1.0);
 
-        ArityOne<EquationSystem> sm = new SuccessorMutation();
-        ArityOne<EquationSystem> osm = new OperatorSwapMutation();
         ArityTwo<EquationSystem> exo = new EquationXOver();
         ArityOne<EquationSystem> es = new EquationSwap();
+        ArityTwo<EquationSystem> bxo = new BranchXOver();
 
         @SuppressWarnings("unchecked")
         Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[3];
-        opers[0] = sm;
-        opers[1] = osm;
-        opers[2] = exo;
-        // opers[3] = es;
+        opers[0] = exo;
+        opers[1] = es;
+        opers[2] = bxo;
 
-        int POPSIZE = 10;
-        int MAXITERS = 300;
+        int POPSIZE = 100;
+        int MAXITERS = 100;
 
         HaeaOperators<EquationSystem> operators = new SimpleHaeaOperators<>(opers);
 
@@ -136,6 +133,6 @@ public class Main {
         Solution<EquationSystem> solution = search.apply(space, goal);
 
         System.out.println(solution.quality());
-        System.out.println(solution.value());*/
+        System.out.println(solution.value());
     }
 }

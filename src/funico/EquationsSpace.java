@@ -32,6 +32,9 @@ public class EquationsSpace extends Space<EquationSystem> {
 
     @Override
     public EquationSystem repair(EquationSystem x) {
+        // take right node
+        x.repair();
+
         return x;
     }
 

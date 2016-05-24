@@ -1,8 +1,5 @@
 package funico;
 
-/**
- * Created by Jefferson on 06/05/2016.
- */
 public class List extends Node {
     public List(String elem, String list) {
         super("list", 2);
@@ -13,11 +10,11 @@ public class List extends Node {
     public List(Node elem, Node list) {
         super("list", 2);
         this.children[0] = new Node(elem);
-        this.children[1] = list instanceof List ? new List(list.children[0], list.children[1]) : new Node(list);
+        this.children[1] = list.getName().equals("list") ? new List(list.children[0], list.children[1]) : new Node(list);
     }
 
-    public List(List toClone) {
-        this(toClone.children[0].getName(), toClone.children[1].getName());
+    public List(Node toClone) {
+        this(toClone.children[0], toClone.children[1]);
     }
 
     @Override

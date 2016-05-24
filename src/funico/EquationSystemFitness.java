@@ -23,7 +23,6 @@ public class EquationSystemFitness extends OptimizationFunction<EquationSystem>{
             try {
                 //System.out.println(es);
                 String answer = Evaluator.evalue(es, this.examples[i][0], 500);
-                //System.out.println("end");
                 if(answer.equals(this.examples[i][1])) count++;
             } catch (ProgramException | GoalException | LexicalException | SyntacticalException ex) {
                 System.out.println(ex);

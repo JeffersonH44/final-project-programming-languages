@@ -19,7 +19,8 @@ public class Node {
         this.children = new Node[this.arity];
 
         for(int i = 0; i < this.arity; ++i) {
-            this.children[i] = new Node(toClone.children[i]);
+            this.children[i] = toClone.children[i].getName().equals("list") ?
+                    new List(toClone.children[i]) : new Node(toClone.children[i]);
         }
     }
 
@@ -40,6 +41,13 @@ public class Node {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        if(getArity() != this.TERMINAL)
+            throw new IllegalStateException("No puede cambiar el nombre de una función o lista");
+
+        this.name = name;
     }
 
     // only for successor mutation

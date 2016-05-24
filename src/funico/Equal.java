@@ -9,9 +9,9 @@ public class Equal extends Node {
     public Equal(Equal toClone) {
         this();
 
-        for(int i = 0; i < 2; ++i) {
-            this.children[i] = new Node(toClone.children[i]);
-        }
+        this.children[0] = new Node(toClone.children[0]);
+        this.children[1] = toClone.children[1].getName().equals("list") ?
+                new List(toClone.children[1]) : new Node(toClone.children[1]);
     }
 
     @Override

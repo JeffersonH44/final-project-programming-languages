@@ -1,8 +1,7 @@
 package funico;
 
-import unalcol.random.integer.IntUniform;
 import unalcol.random.util.RandBool;
-
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Stack;
@@ -13,19 +12,40 @@ public class EquationSystem implements Cloneable {
     public static final int LIST = 2;
     public static final int BOOLEAN = 3;
 
-
     public EquationSystem(int numberOfEquations, String[][] examples, String[] variables, String[] listVariables,
                           String[] functor, Integer[] functorRetType, Map<String, Integer[]> arityFun,
                           String[] terminals, int levels) {
         this.syntaxTree = new RandomSyntaxTree[numberOfEquations];
         this.numberOfEquations = numberOfEquations;
+        this.inductionFunArgs = arityFun.get(functor[0]);
 
         RandBool r = new RandBool(0.5);
+
         boolean[] bool = r.generate(numberOfEquations);
 
+        // first base equations then recursive equations
+        boolean recursive = false, base = false;
+        Boolean[] bools = new Boolean[bool.length];
+        for(int i = 0; i < bool.length; ++i) {
+            bools[i] = bool[i];
+
+            if(bool[i]) {
+                recursive = true;
+            } else {
+                base = true;
+            }
+        }
+
+        if(!recursive) bools[bools.length - 1] = true;
+        if(!base) bools[0] = false;
+
+        Arrays.sort(bools);
+
+        this.baseEquations = 0;
         for(int i = 0; i < numberOfEquations; ++i) {
             this.syntaxTree[i] = new RandomSyntaxTree(examples, variables, listVariables, functor, functorRetType,
-                                                      arityFun, terminals, levels, bool[i]);
+                                                      arityFun, terminals, levels, bools[i]);
+            this.baseEquations += !bools[i] ? 1 : 0;
         }
     }
 
@@ -35,10 +55,14 @@ public class EquationSystem implements Cloneable {
     public EquationSystem(EquationSystem toClone) {
         this.numberOfEquations = toClone.numberOfEquations;
         this.syntaxTree = new RandomSyntaxTree[this.numberOfEquations];
+        this.baseEquations = toClone.baseEquations;
 
         for(int i = 0; i < this.numberOfEquations; ++i) {
             this.syntaxTree[i] = new RandomSyntaxTree(toClone.syntaxTree[i]);
         }
+
+        this.inductionFunArgs = new Integer[toClone.inductionFunArgs.length];
+        System.arraycopy(toClone.inductionFunArgs, 0, this.inductionFunArgs, 0, this.inductionFunArgs.length);
     }
 
     @Override
@@ -54,6 +78,12 @@ public class EquationSystem implements Cloneable {
 
     public int getNumberOfEquations() {
         return numberOfEquations;
+    }
+
+    public void repair() {
+        for(int i = 0; i < this.getNumberOfEquations(); ++i) {
+            this.syntaxTree[i].repair();
+        }
     }
 
     /**
@@ -120,6 +150,16 @@ public class EquationSystem implements Cloneable {
         this.syntaxTree[index] = put;
     }
 
+    public int getBaseEquations() {
+        return this.baseEquations;
+    }
+
+    public Integer[] getInductionFunArgs() {
+        return inductionFunArgs;
+    }
+
     private RandomSyntaxTree[] syntaxTree;
     private int numberOfEquations;
+    private int baseEquations;
+    private Integer[] inductionFunArgs;
 }
