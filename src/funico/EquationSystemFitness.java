@@ -19,9 +19,9 @@ public class EquationSystemFitness extends OptimizationFunction<EquationSystem>{
 
         for(int i = 0; i < this.examples.length; ++i) {
             try {
-                System.out.println("evaluating...");
+                //System.out.println("evaluating...");
                 String answer = Evaluator.evalue(es, this.examples[i][0], 500);
-                System.out.println("complete.");
+                //System.out.println("complete.");
                 if(answer.equals(this.examples[i][1])) count++;
             } catch (ProgramException | GoalException | LexicalException | SyntacticalException ex) {
                 return 0.0;

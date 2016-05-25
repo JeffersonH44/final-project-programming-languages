@@ -1,0 +1,10 @@
+leq(0,1)=true
+leq(0,0)=true
+leq(1,0)=false
+leq(1,1)=true
+leq(1,2)=true
+leq(2,1)=false
+leq(2,5)=true
+leq(5,2)=false
+leq(3,3)=true
+leq(5,1)=false
