@@ -44,8 +44,8 @@ public class Node {
     }
 
     public void setName(String name) {
-        if(getArity() != this.TERMINAL)
-            throw new IllegalStateException("No puede cambiar el nombre de una función o lista");
+        if(getArity() != this.TERMINAL && name.equals(""))
+            throw new IllegalStateException("No puede cambiar el nombre de una función, lista o elemento vacío");
 
         this.name = name;
     }

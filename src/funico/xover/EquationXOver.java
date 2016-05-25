@@ -3,7 +3,6 @@ package funico.xover;
 import funico.EquationSystem;
 import funico.RandomSyntaxTree;
 import unalcol.random.integer.IntUniform;
-import unalcol.random.rngpack.RanMT;
 import unalcol.random.util.RandBool;
 import unalcol.search.population.variation.ArityTwo;
 import unalcol.types.collection.vector.Vector;
@@ -12,6 +11,7 @@ public class EquationXOver extends ArityTwo<EquationSystem> {
 
     @Override
     public Vector<EquationSystem> apply(EquationSystem one, EquationSystem two) {
+
         EquationSystem childOne = new EquationSystem(one);
         EquationSystem childTwo = new EquationSystem(two);
 

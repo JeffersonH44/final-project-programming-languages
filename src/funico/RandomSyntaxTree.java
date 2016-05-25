@@ -2,12 +2,9 @@ package funico;
 
 import java.util.*;
 import java.util.Queue;
-import java.util.regex.Pattern;
 
 import unalcol.random.integer.IntUniform;
 import unalcol.random.util.RandBool;
-import unalcol.types.collection.array.ArrayUtil;
-import unalcol.types.collection.list.*;
 import unalcol.types.collection.vector.Vector;
 
 public class RandomSyntaxTree {
@@ -116,7 +113,6 @@ public class RandomSyntaxTree {
     }
 
     private void generateRandomTree(boolean recursive) {
-
         // common elements in both trees (recursive and base equation)
         String toDeduce = functor[0];
         Integer returnType = functorRetType[0];
@@ -193,9 +189,6 @@ public class RandomSyntaxTree {
                 }
 
                 addNodeByType(currRetType, currentNode, integerElements, booleanElements, listElements);
-                /*if(currRetType == EquationSystem.INTEGER) integerElements.add(currentNode);
-                else if(currRetType == EquationSystem.BOOLEAN) booleanElements.add(currentNode);
-                else listElements.add(currentNode);*/
             }
 
             rBoolean = new IntUniform(booleanElements.size());
@@ -243,14 +236,24 @@ public class RandomSyntaxTree {
         }
     }
 
-    private Set<String> retrieveVariablesFromNode(Node start, Set<String> terminals) {
+    private Set<String> retrieveVariablesFromNode(Node start, Set<String> terminals, boolean left) {
         Set<String> vars = new HashSet<>();
         Queue<Node> q = new LinkedList<>();
         q.add(start);
         while(!q.isEmpty()) {
             Node currentNode = q.remove();
-            if(currentNode.getArity() == Node.TERMINAL && !terminals.contains(currentNode.getName())) {
+            if(currentNode.getArity() == Node.TERMINAL &&
+                    (left || !terminals.contains(currentNode.getName()))) {
                 vars.add(currentNode.getName());
+            } else if(currentNode.getName().equals("list")) {
+                String head = currentNode.children[0].getName();
+                String tail = currentNode.children[1].getName();
+                if(!head.equals(""))
+                    vars.add(currentNode.children[0].getName());
+                if(!tail.equals("") && !tail.equals("list"))
+                    vars.add(currentNode.children[1].getName());
+                if(tail.equals("list"))
+                    q.add(currentNode.children[1]);
             } else {
                 Collections.addAll(q, currentNode.children);
             }
@@ -271,10 +274,10 @@ public class RandomSyntaxTree {
         Set<String> rightVariables, leftVariables;
 
         // go right
-        rightVariables = retrieveVariablesFromNode(this.root.children[1], changeable);
+        rightVariables = retrieveVariablesFromNode(this.root.children[1], changeable, false);
 
         // go left
-        leftVariables = retrieveVariablesFromNode(this.root.children[0], changeable);
+        leftVariables = retrieveVariablesFromNode(this.root.children[0], changeable, true);
 
         // to put in the left part
         Set<String> mand = setDifference(leftVariables, rightVariables);
@@ -288,13 +291,20 @@ public class RandomSyntaxTree {
         mandatory.addAll(mand);
         // TODO: change other variables
         Set<String> usedVariables = new HashSet<>();
+        usedVariables.add("");
         int index = 0;
         while(!q.isEmpty() && index < mandatory.size()) {
             Node currentNode = q.remove();
             if(currentNode.getArity() == Node.TERMINAL &&
                     (changeable.contains(currentNode.getName()) ||
                     usedVariables.contains(currentNode.getName()))) {
+
                 currentNode.setName(mandatory.get(index));
+                index++;
+            } else if(currentNode.getName().equals("list")) {
+                currentNode.children[0] = new Node(mandatory.get(index), Node.TERMINAL);
+                currentNode.children[1] = new List("", "");
+                q.add(currentNode.children[1]);
                 index++;
             } else {
                 Collections.addAll(q, currentNode.children);
@@ -316,13 +326,12 @@ public class RandomSyntaxTree {
         root.children[0] = new Node("geq", 2);
         root.children[1] = new Node("geq", 2);
 
-        root.children[0].children[0] = new Node("A", Node.TERMINAL);
-        root.children[0].children[1] = new Node("A", Node.TERMINAL);
+        root.children[0].children[0] = new List("", "");
+        root.children[0].children[1] = new Node("0", Node.TERMINAL);
 
-        root.children[1].children[0] = new Node("A", Node.TERMINAL);
-        root.children[1].children[1] = new Node("s", 1);
 
-        root.children[1].children[1].children[0] = new Node("B", Node.TERMINAL);
+        root.children[1].children[0] = new Node("D", Node.TERMINAL);
+        root.children[1].children[1] = new Node("E", Node.TERMINAL);
 
         System.out.println(this.getPhenotype());
         this.repair();

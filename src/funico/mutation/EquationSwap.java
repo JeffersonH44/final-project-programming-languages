@@ -17,6 +17,10 @@ public class EquationSwap extends ArityOne<EquationSystem> {
         int recursive = eq.getNumberOfEquations() - base;
         int index, otherIndex;
 
+        if(base == 1 && recursive == 1) {
+            return eq;
+        }
+
         if(base == 1 || recursive == 1) {
             index = (base == 1) ? 1 : 0;
         } else {

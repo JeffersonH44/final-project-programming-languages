@@ -2,10 +2,7 @@
  * Created by Jefferson on 23/04/2016.
  */
 
-import funico.EquationSystem;
-import funico.EquationSystemFitness;
-import funico.EquationsSpace;
-import funico.RandomSyntaxTree;
+import funico.*;
 import funico.mutation.EquationSwap;
 import funico.xover.BranchXOver;
 import funico.xover.EquationXOver;
@@ -23,10 +20,14 @@ import unalcol.search.selection.Selection;
 import unalcol.search.selection.Tournament;
 import unalcol.search.space.ArityOne;
 import unalcol.search.space.Space;
+import unalcol.tracer.ConsoleTracer;
+import unalcol.tracer.Tracer;
+import unalcol.types.collection.Collection;
 import unalcol.types.collection.vector.Vector;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -40,7 +41,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        String[][] examples = {
+        /*String[][] examples = {
                 {"geq(0,1)", "false"},
                 {"geq(0,0)", "true"},
                 {"geq(1,0)", "true"},
@@ -50,19 +51,17 @@ public class Main {
                 {"geq(2,5)", "false"},
                 {"geq(5,2)", "true"},
                 {"geq(3,3)", "true"}
-        };
-
-        /*String[][] examples1 = {
-                {"geq(1,1)", "2"},
-                {"geq(3,5)", "8"},
-                {"geq(10, 1)", "11"},
-                {"geq(1,2)", "3"},
-                {"geq(18,2)", "20"},
-                {"geq(3,8)", "11"},
-                {"geq(7,5)", "12"},
-                {"geq(12,2)", "14"},
-                {"geq(3,3)", "6"}
         };*/
+
+        String[][] examples = {
+                {"sum(1,1)", "2"},
+                {"sum(3,5)", "8"},
+                {"sum(3,1)", "4"},
+                {"sum(2,10)", "12"},
+                {"sum(5,4)", "9"},
+                {"sum(2,1)", "3"},
+                {"sum(7,7)", "14"},
+        };
 
         String a = examples[0][0];
         a = a.replace(")", "");
@@ -91,20 +90,33 @@ public class Main {
             variables[i] = "" + (char)('D' + i);
         }
 
-        System.out.println(Arrays.toString(variables));
-
         String[] listVariables = {"A", "B", "C"};
         String[] terminals = {"0", "1", "true", "false"};
         int maxEquations = 3;
-        int levels = 4;
+        int levels = 3;
 
         Space<EquationSystem> space = new EquationsSpace(maxEquations, examples, variables, listVariables,
                 functionsName, functionsRetType, arityFun, terminals, levels);
 
-        /*EquationSystem eq = space.get();
-        RandomSyntaxTree tree = eq.getSyntaxTree(0);
-
+        /*RandomSyntaxTree tree = space.get().getSyntaxTree(0);
         tree.doTest();*/
+
+        /*EquationSystem eq = space.get();
+        EquationSystem eq1 = space.get();
+
+        System.out.println(eq);
+        System.out.println(eq1);
+
+        ArityTwo<EquationSystem> exo = new EquationXOver();
+        ArityOne<EquationSystem> es = new EquationSwap();
+        ArityTwo<EquationSystem> bxo = new BranchXOver();
+
+        Vector<EquationSystem> result = bxo.apply(eq, eq1);
+
+        System.out.println("result");
+        System.out.println(result.get(0));
+        System.out.println(result.get(1));*/
+
 
         // Optimization function
         OptimizationFunction<EquationSystem> function = new EquationSystemFitness(examples);
@@ -121,7 +133,7 @@ public class Main {
         opers[2] = bxo;
 
         int POPSIZE = 100;
-        int MAXITERS = 100;
+        int MAXITERS = 20;
 
         HaeaOperators<EquationSystem> operators = new SimpleHaeaOperators<>(opers);
 
