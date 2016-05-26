@@ -31,6 +31,10 @@ podido arreglar, ha sido bastante complicado de arreglar ya que aparece en casos
 * Intentamos dar soporte a listas, y este está casi completo pero hay una parte donde nos estamos quedando
 en un ciclo infinito y no hemos dado con el problema, por eso no tenemos casos de ejemplo con listas.
 
+# Código realizado
+
+Todo el código realizado por nosotros está en el paquete funico.
+
 # Repositorio
 
 https://github.com/JeffersonH44/final-project-programming-languages
