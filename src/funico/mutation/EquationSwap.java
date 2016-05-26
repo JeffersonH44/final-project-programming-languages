@@ -7,6 +7,10 @@ import unalcol.random.integer.RandInt;
 import unalcol.random.util.RandBool;
 import unalcol.search.space.ArityOne;
 
+/**
+ * Mutación que cambia la prioridad de una ecuación en el sistema de ecuaciones,
+ * se aplica sobre ecuaciones base o ecuaciones recursivas.
+ */
 public class EquationSwap extends ArityOne<EquationSystem> {
 
     @Override

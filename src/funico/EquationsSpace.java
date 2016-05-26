@@ -1,5 +1,6 @@
 package funico;
 
+import unalcol.random.integer.IntUniform;
 import unalcol.search.space.Space;
 
 import java.util.Map;
@@ -19,6 +20,7 @@ public class EquationsSpace extends Space<EquationSystem> {
         this.arityFun = arityFun;
         this.terminals = terminals;
         this.levels = levels;
+        this.randomEq = new IntUniform(2, numberOfEquations + 1);
     }
     @Override
     public boolean feasible(EquationSystem x) {
@@ -40,7 +42,7 @@ public class EquationsSpace extends Space<EquationSystem> {
 
     @Override
     public EquationSystem get() {
-        EquationSystem es = new EquationSystem(numberOfEquations, examples, variables, listVariables, functionsName,
+        EquationSystem es = new EquationSystem(this.randomEq.generate(), examples, variables, listVariables, functionsName,
                                                 functionsRetType, arityFun, terminals, levels);
         return es;
     }
@@ -54,4 +56,5 @@ public class EquationsSpace extends Space<EquationSystem> {
     private Map<String, Integer[]> arityFun;
     private String[] terminals;
     private int levels;
+    private IntUniform randomEq;
 }

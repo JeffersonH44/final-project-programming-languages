@@ -8,6 +8,10 @@ import unalcol.random.util.RandBool;
 import unalcol.search.population.variation.ArityTwo;
 import unalcol.types.collection.vector.Vector;
 
+/**
+ * Operador que toma una rama de cada sistema de ecuaciones, escogiendo de manera
+ * aleatoria un árbol sintáctico de cada sistema, y aplica el cruce con estas ramas.
+ */
 public class BranchXOver extends ArityTwo<EquationSystem> {
 
     @Override

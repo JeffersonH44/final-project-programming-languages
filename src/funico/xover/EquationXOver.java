@@ -7,6 +7,10 @@ import unalcol.random.util.RandBool;
 import unalcol.search.population.variation.ArityTwo;
 import unalcol.types.collection.vector.Vector;
 
+
+/**
+ * Toma una ecuación de cada sistema de ecuaciones y los intercambia.
+ */
 public class EquationXOver extends ArityTwo<EquationSystem> {
 
     @Override

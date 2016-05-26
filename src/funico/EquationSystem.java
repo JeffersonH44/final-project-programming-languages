@@ -1,5 +1,6 @@
 package funico;
 
+import unalcol.random.integer.IntUniform;
 import unalcol.random.util.RandBool;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -40,6 +41,7 @@ public class EquationSystem implements Cloneable {
         if(!base) bools[0] = false;
 
         Arrays.sort(bools);
+        IntUniform randomLevels = new IntUniform(3, levels + 1);
 
         this.baseEquations = 0;
         for(int i = 0; i < numberOfEquations; ++i) {
