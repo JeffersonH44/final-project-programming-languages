@@ -1,3 +1,5 @@
+package funico;
+
 import funico.*;
 import funico.mutation.ArityOneCutter;
 import funico.mutation.EquationSwap;
@@ -39,7 +41,7 @@ public class Main {
          * or - (||)
          * xor - (^)
          */
-        String selected = "geq";
+        String selected = "con";
 
         Map<String, String[][]> map = init();
 
@@ -135,6 +137,17 @@ public class Main {
     public static Map<String, String[][]> init() {
         Map<String, String[][]> map = new HashMap<>();
 
+        String[][] test = {
+                {"con([1,2,3],1)", "true"},
+                {"con([0],0)", "true"},
+                {"con([1, 2],0)", "false"},
+                {"con([8,7,6,5],5)", "true"},
+                {"con([1,4,7],3)", "false"},
+                {"con([5],4)", "false"},
+                {"con([10],11)", "false"},
+                {"con([1,2,3,4,5,6,7,8,9],3)", "true"},
+                {"con([2,4,6,8,10],3)", "false"}
+        };
         String[][] examplesgeq = {
                 {"geq(0,1)", "false"},
                 {"geq(0,0)", "true"},
@@ -197,13 +210,14 @@ public class Main {
                 {"xor(1,0)", "true"},
                 {"xor(1,1)", "false"}
         };
-        map.put("geq",examplesgeq);
-        map.put("leq",examplesleq);
-        map.put("lt",exampleslt);
-        map.put("gt",examplesgt);
-        map.put("and",examplesand);
-        map.put("or",examplesor);
-        map.put("xor",examplesxor);
+        map.put("geq", examplesgeq);
+        map.put("leq", examplesleq);
+        map.put("lt", exampleslt);
+        map.put("gt", examplesgt);
+        map.put("and", examplesand);
+        map.put("or", examplesor);
+        map.put("xor", examplesxor);
+        map.put("con", test);
 
         return map;
     }

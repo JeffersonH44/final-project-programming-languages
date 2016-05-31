@@ -1,5 +1,10 @@
 package funico;
 
+import fplearning.interpreter.Evaluator;
+import fplearning.interpreter.GoalException;
+import fplearning.interpreter.ProgramException;
+import fplearning.language.LexicalException;
+import fplearning.language.SyntacticalException;
 import unalcol.random.integer.IntUniform;
 import unalcol.random.util.RandBool;
 import java.util.Arrays;
@@ -19,6 +24,7 @@ public class EquationSystem implements Cloneable {
         this.syntaxTree = new RandomSyntaxTree[numberOfEquations];
         this.numberOfEquations = numberOfEquations;
         this.inductionFunArgs = arityFun.get(functor[0]);
+        this.testSample = examples[0][0];
 
         RandBool r = new RandBool(0.5);
 
@@ -83,8 +89,32 @@ public class EquationSystem implements Cloneable {
     }
 
     public void repair() {
-        for(int i = 0; i < this.getNumberOfEquations(); ++i) {
-            this.syntaxTree[i].repair();
+        boolean[] needRepair = new boolean[this.getNumberOfEquations()];
+        for(int j = 0; j < 2; ++j) {
+            if(j == 0) {
+                try {
+                    Evaluator.evalue(this.toString(), this.testSample, 500);
+                } catch (LexicalException | SyntacticalException | ProgramException | GoalException e) {
+                    for(int i = 0; i < this.getNumberOfEquations(); ++i) {
+                        needRepair[i] = this.syntaxTree[i].repair();
+                    }
+                    System.out.println(this.toString());
+                }
+            } else {
+                try {
+                    Evaluator.evalue(this.toString(), this.testSample, 500);
+                } catch (LexicalException | SyntacticalException | ProgramException | GoalException e) {
+                    System.err.println("The error still persist");
+                    e.printStackTrace();
+                    for(int i  = 0; i < this.getNumberOfEquations(); ++i) {
+                        if(needRepair[i]) {
+                            RandomSyntaxTree tree = this.getSyntaxTree(i);
+                            tree.generateRandomTree(tree.isRecursive());
+                        }
+                    }
+                }
+            }
+
         }
     }
 
@@ -164,4 +194,5 @@ public class EquationSystem implements Cloneable {
     private int numberOfEquations;
     private int baseEquations;
     private Integer[] inductionFunArgs;
+    private String testSample;
 }

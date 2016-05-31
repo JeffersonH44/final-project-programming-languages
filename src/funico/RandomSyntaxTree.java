@@ -19,6 +19,7 @@ public class RandomSyntaxTree {
         this.examples = examples;
         this.variables = variables;
         this.listVariables = listVariables;
+        this.recursive = recursive;
 
         generateRandomTree(recursive);
     }
@@ -28,7 +29,15 @@ public class RandomSyntaxTree {
      */
     public RandomSyntaxTree(RandomSyntaxTree toClone) {
         this.root = new Equal((Equal) toClone.root);
+        this.arityFun = toClone.arityFun;
+        this.functor = toClone.functor;
+        this.functorRetType = toClone.functorRetType;
         this.terminals = toClone.terminals;
+        this.levels = toClone.levels;
+        this.examples = toClone.examples;
+        this.variables = toClone.variables;
+        this.listVariables = toClone.listVariables;
+        this.recursive = toClone.isRecursive();
     }
 
     public String getPhenotype() {
@@ -112,7 +121,7 @@ public class RandomSyntaxTree {
         else listElements.add(node);
     }
 
-    private void generateRandomTree(boolean recursive) {
+    public void generateRandomTree(boolean recursive) {
         // common elements in both trees (recursive and base equation)
         String toDeduce = functor[0];
         Integer returnType = functorRetType[0];
@@ -236,82 +245,207 @@ public class RandomSyntaxTree {
         }
     }
 
-    private Set<String> retrieveVariablesFromNode(Node start, Set<String> terminals, boolean left) {
-        Set<String> vars = new HashSet<>();
+    private Map<String, Set<String>> retrieveVariablesFromNode(Node start, Set<String> terminals, boolean left) {
+        Map<String, Set<String>> variables = new HashMap<>();
+
+        Set<String> listVariables = new HashSet<>();
+        Set<String> otherVariables = new HashSet<>();
+
+        variables.put("list", listVariables);
+        variables.put("others", otherVariables);
+
+        //TODO: check in case of base equation
+        if(start.getArity() == Node.TERMINAL) {
+            return variables;
+        }
+
         Queue<Node> q = new LinkedList<>();
         q.add(start);
         while(!q.isEmpty()) {
             Node currentNode = q.remove();
-            if(currentNode.getArity() == Node.TERMINAL &&
+            if(currentNode.getName().equals("list")) {
+                Node head = currentNode.children[0];
+                Node tail = currentNode.children[1];
+
+                // si la cola es una lista, añadirla a la cola y cambiar la cabeza
+                if(tail.getName().equals("list")) {
+                    q.add(tail);
+                } else if(!tail.getName().equals("")){
+                    listVariables.add(tail.getName());
+                }
+
+                if(head.getArity() != Node.TERMINAL) {
+                    q.add(head);
+                } else if(!head.getName().equals("")){
+                    otherVariables.add(head.getName());
+                }
+
+                continue;
+            }
+
+            Integer[] args = arityFun.get(currentNode.getName());
+
+            for(int i = 0; i < args.length; ++i) {
+                Node currentArg = currentNode.children[i];
+                if(currentArg.getArity() != Node.TERMINAL) {
+                    q.add(currentArg);
+                    continue;
+                }
+
+                if(args[i] == EquationSystem.LIST) {
+                    listVariables.add(currentArg.getName());
+                } else {
+                    otherVariables.add(currentArg.getName());
+                }
+            }
+
+            // we check left because we cannot use the terminals to change
+            /*if(currentNode.getArity() == Node.TERMINAL &&
                     (left || !terminals.contains(currentNode.getName()))) {
-                vars.add(currentNode.getName());
+                otherVariables.add(currentNode.getName());
             } else if(currentNode.getName().equals("list")) {
                 String head = currentNode.children[0].getName();
                 String tail = currentNode.children[1].getName();
                 if(!head.equals(""))
-                    vars.add(currentNode.children[0].getName());
+                    otherVariables.add(currentNode.children[0].getName());
                 if(!tail.equals("") && !tail.equals("list"))
-                    vars.add(currentNode.children[1].getName());
+                    listVariables.add(currentNode.children[1].getName());
                 if(tail.equals("list"))
                     q.add(currentNode.children[1]);
             } else {
                 Collections.addAll(q, currentNode.children);
-            }
+            }*/
         }
 
-        return vars;
+        return variables;
     }
 
-    private Set<String> setDifference(Set<String> a, Set<String> b) {
-        Set<String> union = new HashSet<>(b);
-        union.removeAll(a);
-        return union;
+    private Map<String, Set<String>> setDifference(Map<String, Set<String>> a, Map<String, Set<String>> b) {
+        String[] vars = new String[]{"list", "others"};
+        Map<String, Set<String>> result = new HashMap<>();
+
+        for(String var : vars) {
+
+            Set<String> one = a.get(var);
+            Set<String> two = b.get(var);
+
+            Set<String> union = new HashSet<>(two);
+            union.removeAll(one);
+
+            result.put(var, union);
+        }
+        return result;
     }
 
-    public void repair() {
-        Set<String> changeable = new HashSet<>();
-        Collections.addAll(changeable, this.terminals);
-        Set<String> rightVariables, leftVariables;
+    public boolean repair() {
+        boolean needRepair = false;
+
+        Set<String> terminalsChangeable = new HashSet<>();
+        Set<String> listChangeable = new HashSet<>();
+        //Set<String> terminalsMandatory = new HashSet<>();
+
+        Collections.addAll(terminalsChangeable, this.terminals);
+
+        Map<String, Set<String>> rightVariables, leftVariables;
 
         // go right
-        rightVariables = retrieveVariablesFromNode(this.root.children[1], changeable, false);
+        rightVariables = retrieveVariablesFromNode(this.root.children[1], terminalsChangeable, false);
 
         // go left
-        leftVariables = retrieveVariablesFromNode(this.root.children[0], changeable, true);
+        leftVariables = retrieveVariablesFromNode(this.root.children[0], terminalsChangeable, true);
 
         // to put in the left part
-        Set<String> mand = setDifference(leftVariables, rightVariables);
+        Map<String, Set<String>> mand = setDifference(leftVariables, rightVariables);
 
-        Set<String> unusedVariables = setDifference(rightVariables, leftVariables);
-        changeable.addAll(unusedVariables);
+        Map<String, Set<String>> unusedVariables = setDifference(rightVariables, leftVariables);
+        terminalsChangeable.addAll(unusedVariables.get("others"));
+        listChangeable.addAll(unusedVariables.get("list"));
 
         Queue<Node> q = new LinkedList<>();
         q.add(this.root.children[0]);
-        ArrayList<String> mandatory = new ArrayList<>();
-        mandatory.addAll(mand);
+
+        ArrayList<String> terminalMandatory = new ArrayList<>();
+        ArrayList<String> listMandatory = new ArrayList<>();
+
+        terminalMandatory.addAll(mand.get("others"));
+        listMandatory.addAll(mand.get("list"));
+
+        if(terminalMandatory.size() > 0 || listMandatory.size() > 0) {
+            needRepair = true;
+        }
+
         // TODO: change other variables
         Set<String> usedVariables = new HashSet<>();
         usedVariables.add("");
-        int index = 0;
-        while(!q.isEmpty() && index < mandatory.size()) {
+        usedVariables.add("temp");
+
+        int terminalIndex = 0, listIndex = 0;
+        while(!q.isEmpty() && !(terminalIndex == terminalMandatory.size() && listIndex == listMandatory.size())) {
             Node currentNode = q.remove();
-            if(currentNode.getArity() == Node.TERMINAL &&
-                    (changeable.contains(currentNode.getName()) ||
-                    usedVariables.contains(currentNode.getName()))) {
+            if(currentNode.getName().equals("list")) {
+                Node head = currentNode.children[0];
+                Node tail = currentNode.children[1];
 
-                currentNode.setName(mandatory.get(index));
-                index++;
-            } else if(currentNode.getName().equals("list")) {
-                currentNode.children[0] = new Node(mandatory.get(index), Node.TERMINAL);
-                currentNode.children[1] = new List("", "");
-                q.add(currentNode.children[1]);
-                index++;
+                // si la cola es una lista, añadirla a la cola y cambiar la cabeza
+                if(tail.getName().equals("list")) {
+                    q.add(tail);
+                } else {
+                    if((listChangeable.contains(tail.getName())
+                            || usedVariables.contains(tail.getName()))
+                            && listIndex < listMandatory.size()) {
+                        tail.setName(listMandatory.get(listIndex++));
+                    } else {
+                        continue;
+                    }
+                    usedVariables.add(tail.getName());
+                }
+
+                if((terminalsChangeable.contains(head.getName())
+                        || usedVariables.contains(head.getName()))
+                        && terminalIndex < terminalMandatory.size()) {
+                    head.setName(terminalMandatory.get(terminalIndex++));
+                    usedVariables.add(head.getName());
+                }
             } else {
-                Collections.addAll(q, currentNode.children);
-            }
+                Integer[] args = arityFun.get(currentNode.getName());
+                for(int i = 0; i < args.length; ++i) {
+                    Node currentArg = currentNode.children[i];
+                    if(currentArg.getArity() != Node.TERMINAL) {
+                        if(currentArg.getName().equals("list")
+                                && currentArg.children[0].getName().equals("")
+                                && currentArg.children[1].getName().equals("")
+                                && listIndex < listMandatory.size()) {
+                            // variable temporal que reemplace la lista para ser tomada abajo.
+                            currentArg = currentNode.children[i] = new Node("temp", Node.TERMINAL);
 
-            usedVariables.add(currentNode.getName());
+                        } else {
+                            q.add(currentArg);
+                            continue;
+                        }
+                    }
+
+                    switch (args[i]) {
+                        case EquationSystem.LIST:
+                            if((listChangeable.contains(currentArg.getName())
+                                    || usedVariables.contains(currentArg.getName()))
+                                    && listIndex < listMandatory.size()) {
+                                currentArg.setName(listMandatory.get(listIndex++));
+                            }
+                            break;
+                        default:
+                            if((terminalsChangeable.contains(currentArg.getName())
+                                    || usedVariables.contains(currentArg.getName()))
+                                    && terminalIndex < terminalMandatory.size()) {
+                                currentArg.setName(terminalMandatory.get(terminalIndex++));
+                            }
+                            break;
+                    }
+                    usedVariables.add(currentArg.getName());
+                }
+            }
         }
+
+        return needRepair;
     }
 
     public Node getRoot() {
@@ -338,6 +472,11 @@ public class RandomSyntaxTree {
         System.out.println(this.getPhenotype());
     }
 
+    public boolean isRecursive() {
+        return recursive;
+    }
+
+    private boolean recursive;
     private Node root;
     private String[] functor;
     private Integer[] functorRetType;
