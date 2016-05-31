@@ -3,6 +3,7 @@ package funico;
 import funico.*;
 import funico.mutation.ArityOneCutter;
 import funico.mutation.EquationSwap;
+import funico.mutation.InternalSwap;
 import funico.xover.BranchXOver;
 import funico.xover.EquationXOver;
 import unalcol.evolution.haea.HAEA;
@@ -110,13 +111,14 @@ public class Main {
         ArityOne<EquationSystem> es = new EquationSwap();
         ArityTwo<EquationSystem> bxo = new BranchXOver();
         ArityOne<EquationSystem> fcm = new ArityOneCutter();
+        ArityOne<EquationSystem> ism = new InternalSwap();
 
         @SuppressWarnings("unchecked")
-        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[3];
+        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[4];
         opers[0] = exo;
         opers[1] = es;
         opers[2] = bxo;
-        //opers[3] = fcm;
+        opers[3] = ism;
 
         int POPSIZE = 75;
         int MAXITERS = 100;
