@@ -98,14 +98,14 @@ public class EquationSystem implements Cloneable {
                     for(int i = 0; i < this.getNumberOfEquations(); ++i) {
                         needRepair[i] = this.syntaxTree[i].repair();
                     }
-                    System.out.println(this.toString());
+                    //System.out.println(this.toString());
                 }
             } else {
                 try {
                     Evaluator.evalue(this.toString(), this.testSample, 500);
                 } catch (LexicalException | SyntacticalException | ProgramException | GoalException e) {
-                    System.err.println("The error still persist");
-                    e.printStackTrace();
+                    //System.err.println("The error still persist");
+                    //e.printStackTrace();
                     for(int i  = 0; i < this.getNumberOfEquations(); ++i) {
                         if(needRepair[i]) {
                             RandomSyntaxTree tree = this.getSyntaxTree(i);

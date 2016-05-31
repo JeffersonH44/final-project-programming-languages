@@ -22,5 +22,4 @@ public class HAEA<T> extends IterativePopulationSearch<T> {
 	public HAEA( int n, HaeaStep<T> step, int MAXITERS ){
 		this( n, step, new ForLoopCondition<PopulationSolution<T>>(MAXITERS) );
 	}
-	
 }

@@ -4,15 +4,20 @@ import funico.*;
 import funico.mutation.ArityOneCutter;
 import funico.mutation.EquationSwap;
 import funico.mutation.InternalSwap;
+import funico.writer.PopulationTracer;
+import funico.writer.TreeWriter;
 import funico.xover.BranchXOver;
 import funico.xover.EquationXOver;
-import unalcol.evolution.haea.HAEA;
-import unalcol.evolution.haea.HaeaOperators;
-import unalcol.evolution.haea.SimpleHaeaOperators;
+import unalcol.descriptors.Descriptors;
+import unalcol.descriptors.WriteDescriptors;
+import unalcol.evolution.haea.*;
+import unalcol.io.Write;
 import unalcol.optimization.OptimizationFunction;
 import unalcol.optimization.OptimizationGoal;
 import unalcol.search.Goal;
 import unalcol.search.Solution;
+import unalcol.search.population.PopulationSolution;
+import unalcol.search.population.PopulationSolutionDescriptors;
 import unalcol.search.population.variation.ArityTwo;
 import unalcol.search.population.variation.Operator;
 import unalcol.search.selection.Elitism;
@@ -24,6 +29,7 @@ import unalcol.tracer.ConsoleTracer;
 import unalcol.tracer.Tracer;
 import unalcol.types.collection.Collection;
 import unalcol.types.collection.vector.Vector;
+import unalcol.types.real.array.DoubleArrayPlainWrite;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,7 +48,7 @@ public class Main {
          * or - (||)
          * xor - (^)
          */
-        String selected = "con";
+        String selected = "geq";
 
         Map<String, String[][]> map = init();
 
@@ -114,14 +120,15 @@ public class Main {
         ArityOne<EquationSystem> ism = new InternalSwap();
 
         @SuppressWarnings("unchecked")
-        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[4];
+        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[5];
         opers[0] = exo;
         opers[1] = es;
-        opers[2] = bxo;
+        opers[2] = fcm;
         opers[3] = ism;
+        opers[4] = bxo;
 
-        int POPSIZE = 75;
-        int MAXITERS = 100;
+        int POPSIZE = 100;
+        int MAXITERS = 300;
 
         HaeaOperators<EquationSystem> operators = new SimpleHaeaOperators<>(opers);
 
@@ -130,8 +137,21 @@ public class Main {
 
         HAEA<EquationSystem> search = new HAEA<>(POPSIZE, operators, tournament, MAXITERS );
 
+        WriteDescriptors write_desc = new WriteDescriptors();
+        Write.set(EquationSystem.class, new TreeWriter());
+        Write.set(HaeaStep.class, new WriteHaeaStep<EquationSystem>());
+        Descriptors.set(PopulationSolution.class, new PopulationSolutionDescriptors<EquationSystem>());
+        Descriptors.set(HaeaOperators.class, new SimpleHaeaOperatorsDescriptor<EquationSystem>());
+        Write.set(HaeaOperators.class, write_desc);
+
+        String[][] population = new String[POPSIZE][2];
+        Tracer tracer = new PopulationTracer(population);
+        //Tracer.addTracer(search, tracer);
+        Tracer.addTracer(goal, tracer);
+
         Solution<EquationSystem> solution = search.apply(space, goal);
 
+        System.out.println(population[0][0] + " = " + population[0][1]);
         System.out.println(solution.quality());
         System.out.println(solution.value());
     }

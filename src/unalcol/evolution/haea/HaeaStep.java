@@ -20,6 +20,7 @@ import unalcol.types.collection.vector.*;
  */
 public class HaeaStep<T> extends PopulationSearch<T>{
 
+    private int iter;
 	protected HaeaReplacement<T> replacement;
 	
     /**
@@ -44,6 +45,7 @@ public class HaeaStep<T> extends PopulationSearch<T>{
     	this.replacement = replacement;
         this.operators = replacement.operators();
         this.selection = selection;
+        this.iter = 0;
     }
 
     /**
@@ -58,6 +60,7 @@ public class HaeaStep<T> extends PopulationSearch<T>{
     	this.replacement = new HaeaReplacement<T>( operators );
         this.operators = operators;
         this.selection = selection;
+        this.iter = 0;
     }
 
     /**
