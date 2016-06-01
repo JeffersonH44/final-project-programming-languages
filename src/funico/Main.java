@@ -31,10 +31,8 @@ import unalcol.types.collection.Collection;
 import unalcol.types.collection.vector.Vector;
 import unalcol.types.real.array.DoubleArrayPlainWrite;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -128,7 +126,7 @@ public class Main {
         opers[4] = bxo;
 
         int POPSIZE = 100;
-        int MAXITERS = 300;
+        int MAXITERS = 500;
 
         HaeaOperators<EquationSystem> operators = new SimpleHaeaOperators<>(opers);
 
@@ -146,14 +144,29 @@ public class Main {
 
         String[][] population = new String[POPSIZE][2];
         Tracer tracer = new PopulationTracer(population);
-        //Tracer.addTracer(search, tracer);
         Tracer.addTracer(goal, tracer);
 
         Solution<EquationSystem> solution = search.apply(space, goal);
 
-        System.out.println(population[0][0] + " = " + population[0][1]);
+        printPopulation(population);
         System.out.println(solution.quality());
         System.out.println(solution.value());
+    }
+
+    public static void printPopulation(String[][] population) {
+        Arrays.sort(population, new Comparator<String[]>() {
+            @Override
+            public int compare(String[] o1, String[] o2) {
+                final Double d1 = Double.valueOf(o1[1]);
+                final Double d2 = Double.valueOf(o2[1]);
+                return -d1.compareTo(d2);
+            }
+        });
+
+        for(String pop[] : population) {
+            System.out.println("elem:" + pop[0]);
+            System.out.println("fitness: " + pop[1]);
+        }
     }
 
     public static Map<String, String[][]> init() {

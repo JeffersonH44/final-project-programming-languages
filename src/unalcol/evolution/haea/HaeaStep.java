@@ -91,7 +91,6 @@ public class HaeaStep<T> extends PopulationSearch<T>{
      */
 	@Override
 	public PopulationSolution<T> apply( PopulationSolution<T> population, Space<T> space, Goal<T> goal ){
-        //System.out.println("iter");
         operators.resize(population.size());
         Vector<T> buffer = new Vector<T>();
         Vector<Double> next_q = new Vector<Double>();

@@ -20,7 +20,7 @@ public class EquationsSpace extends Space<EquationSystem> {
         this.arityFun = arityFun;
         this.terminals = terminals;
         this.levels = levels;
-        this.randomEq = new IntUniform(2, numberOfEquations + 1);
+        this.randomEq = new IntUniform(numberOfEquations, numberOfEquations + 1);//new IntUniform(2, numberOfEquations + 1);
     }
     @Override
     public boolean feasible(EquationSystem x) {
