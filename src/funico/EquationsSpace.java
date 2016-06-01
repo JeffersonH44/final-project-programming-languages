@@ -43,7 +43,7 @@ public class EquationsSpace extends Space<EquationSystem> {
     @Override
     public EquationSystem get() {
         EquationSystem es = new EquationSystem(this.randomEq.generate(), examples, variables, listVariables, functionsName,
-                                                functionsRetType, arityFun, terminals, levels);
+                                                functionsRetType, arityFun, terminals, levels, "");
         return es;
     }
 

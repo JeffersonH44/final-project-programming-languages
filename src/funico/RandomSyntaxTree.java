@@ -126,7 +126,7 @@ public class RandomSyntaxTree {
         String toDeduce = functor[0];
         Integer returnType = functorRetType[0];
 
-        root = new Equal();
+        setRoot(new Equal());
         root.children[0] = new Node(toDeduce, arityFun.get(toDeduce).length);
 
         if(recursive) {
@@ -456,7 +456,7 @@ public class RandomSyntaxTree {
      * que chambonada la forma de hacer testing
      */
     public void doTest() {
-        root = new Equal();
+        setRoot(new Equal());
         root.children[0] = new Node("geq", 2);
         root.children[1] = new Node("geq", 2);
 
@@ -486,4 +486,11 @@ public class RandomSyntaxTree {
     private String[][] examples;
     private Map<String, Integer[]> arityFun;
     private int levels;
+
+    /**
+     * @param root the root to set
+     */
+    public void setRoot(Node root) {
+        this.root = root;
+    }
 }

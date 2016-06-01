@@ -20,7 +20,7 @@ public class EquationSystem implements Cloneable {
 
     public EquationSystem(int numberOfEquations, String[][] examples, String[] variables, String[] listVariables,
                           String[] functor, Integer[] functorRetType, Map<String, Integer[]> arityFun,
-                          String[] terminals, int levels) {
+                          String[] terminals, int levels, String program) {
         this.syntaxTree = new RandomSyntaxTree[numberOfEquations];
         this.numberOfEquations = numberOfEquations;
         this.inductionFunArgs = arityFun.get(functor[0]);
@@ -48,7 +48,7 @@ public class EquationSystem implements Cloneable {
 
         Arrays.sort(bools);
         IntUniform randomLevels = new IntUniform(3, levels + 1);
-
+        
         this.baseEquations = 0;
         for(int i = 0; i < numberOfEquations; ++i) {
             this.syntaxTree[i] = new RandomSyntaxTree(examples, variables, listVariables, functor, functorRetType,

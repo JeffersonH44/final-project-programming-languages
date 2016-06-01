@@ -1,12 +1,18 @@
 package funico;
 
-import funico.*;
+import fplearning.interpreter.Evaluator;
+import fplearning.interpreter.GoalException;
+import fplearning.interpreter.ProgramException;
+import fplearning.language.LexicalException;
+import fplearning.language.SyntacticalException;
 import funico.mutation.ArityOneCutter;
 import funico.mutation.EquationSwap;
 import funico.mutation.InternalSwap;
+import funico.mutation.TerminalMutator;
 import funico.writer.PopulationTracer;
 import funico.writer.TreeWriter;
 import funico.xover.BranchXOver;
+import funico.xover.EqualizeXOver;
 import funico.xover.EquationXOver;
 import unalcol.descriptors.Descriptors;
 import unalcol.descriptors.WriteDescriptors;
@@ -25,17 +31,48 @@ import unalcol.search.selection.Selection;
 import unalcol.search.selection.Tournament;
 import unalcol.search.space.ArityOne;
 import unalcol.search.space.Space;
-import unalcol.tracer.ConsoleTracer;
 import unalcol.tracer.Tracer;
-import unalcol.types.collection.Collection;
-import unalcol.types.collection.vector.Vector;
-import unalcol.types.real.array.DoubleArrayPlainWrite;
 
 import java.util.*;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 public class Main {
-    public static void main(String[] args) {
+    private String[][] population;
+    private EquationSystem solution;
+    private boolean tournament;
+    private double quality;
+    private int iterations;
+    private int populationSize;
+    private Map<String, Operator<EquationSystem>> ops;
+    
+    public Main() {
+        this.ops = new HashMap<>();
+        this.ops.put("aoc", new ArityOneCutter());
+        this.ops.put("es", new EquationSwap());
+        this.ops.put("is", new InternalSwap());
+        this.ops.put("tm", new TerminalMutator());
+        this.ops.put("bxo", new BranchXOver());
+        this.ops.put("exo", new EquationXOver());
+        this.ops.put("eqxo", new EqualizeXOver());
+    }
+    
+    public static String[] evaluateProgram(String program, String[] toEvaluate) {
+        String[] ret = new String[toEvaluate.length];
+        try {
+            for(int i = 0; i < toEvaluate.length; ++i) {
+                ret[i] = Evaluator.evalue(program, toEvaluate[i], 500);
+            }
+        } catch (LexicalException | SyntacticalException | ProgramException | GoalException ex) {
+            //Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return ret;
+        }
+        return ret;
+    }
+
+    public void generateSolution(String[][] examples, Map<String, Boolean> selectedOps) {
         /**
          * Por ahora podemos hacer pruebas con estas funciones.
          * geq - mayor o igual (>=)
@@ -48,9 +85,9 @@ public class Main {
          */
         String selected = "geq";
 
-        Map<String, String[][]> map = init();
+        //Map<String, String[][]> map = init();
 
-        String[][] examples = map.get(selected);
+        //String[][] examples = ex;//map.get(selected);
 
         String a = examples[0][0];
         a = a.replace(")", "");
@@ -87,53 +124,48 @@ public class Main {
         Space<EquationSystem> space = new EquationsSpace(maxEquations, examples, variables, listVariables,
                 functionsName, functionsRetType, arityFun, terminals, levels);
 
-        /*RandomSyntaxTree tree = space.get().getSyntaxTree(0);
-        tree.doTest();*/
-
-        /*EquationSystem eq = space.get();
-        EquationSystem eq1 = space.get();
-
-        System.out.println(eq);
-        System.out.println(eq1);
-
-        ArityTwo<EquationSystem> exo = new EquationXOver();
-        ArityOne<EquationSystem> es = new EquationSwap();
-        ArityTwo<EquationSystem> bxo = new BranchXOver();
-
-        Vector<EquationSystem> result = bxo.apply(eq, eq1);
-
-        System.out.println("result");
-        System.out.println(result.get(0));
-        System.out.println(result.get(1));*/
-
-
         // Optimization function
         OptimizationFunction<EquationSystem> function = new EquationSystemFitness(examples);
         Goal<EquationSystem> goal = new OptimizationGoal<>(function, false, 1.0);
 
-        ArityTwo<EquationSystem> exo = new EquationXOver();
+        /*ArityTwo<EquationSystem> exo = new EquationXOver();
         ArityOne<EquationSystem> es = new EquationSwap();
         ArityTwo<EquationSystem> bxo = new BranchXOver();
         ArityOne<EquationSystem> fcm = new ArityOneCutter();
-        ArityOne<EquationSystem> ism = new InternalSwap();
+        ArityOne<EquationSystem> ism = new InternalSwap();*/
+        
+        int counter = 0;
+        for(Boolean b : selectedOps.values()) {
+            if(b) counter++;
+        }
 
         @SuppressWarnings("unchecked")
-        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[5];
+        Operator<EquationSystem>[] opers = (Operator<EquationSystem>[])new Operator[counter];
+        
+        int index = 0;
+        for(String key : selectedOps.keySet()) {
+            if(selectedOps.get(key)) {
+                System.out.println("selected: " + key);
+                opers[index] = this.ops.get(key);
+                index++;
+            }
+        }
+        /*
         opers[0] = exo;
         opers[1] = es;
         opers[2] = fcm;
         opers[3] = ism;
-        opers[4] = bxo;
+        opers[4] = bxo;*/
 
-        int POPSIZE = 100;
-        int MAXITERS = 500;
+        int POPSIZE = getPopulationSize();
+        int MAXITERS = getIterations();
 
         HaeaOperators<EquationSystem> operators = new SimpleHaeaOperators<>(opers);
 
         Selection<EquationSystem> tournament = new Tournament<>(4);
         Selection<EquationSystem> elitism = new Elitism<>(.9, .1);
 
-        HAEA<EquationSystem> search = new HAEA<>(POPSIZE, operators, tournament, MAXITERS );
+        HAEA<EquationSystem> search = new HAEA<>(POPSIZE, operators, isTournament() ? tournament : elitism, MAXITERS );
 
         WriteDescriptors write_desc = new WriteDescriptors();
         Write.set(EquationSystem.class, new TreeWriter());
@@ -142,18 +174,12 @@ public class Main {
         Descriptors.set(HaeaOperators.class, new SimpleHaeaOperatorsDescriptor<EquationSystem>());
         Write.set(HaeaOperators.class, write_desc);
 
-        String[][] population = new String[POPSIZE][2];
-        Tracer tracer = new PopulationTracer(population);
+        this.setPopulation(new String[POPSIZE][2]);
+        Tracer tracer = new PopulationTracer(this.getPopulation());
         Tracer.addTracer(goal, tracer);
 
         Solution<EquationSystem> solution = search.apply(space, goal);
-
-        printPopulation(population);
-        System.out.println(solution.quality());
-        System.out.println(solution.value());
-    }
-
-    public static void printPopulation(String[][] population) {
+        
         Arrays.sort(population, new Comparator<String[]>() {
             @Override
             public int compare(String[] o1, String[] o2) {
@@ -163,106 +189,92 @@ public class Main {
             }
         });
 
+        //printPopulation(this.population);
+        this.setSolution(solution.value());
+        this.setQuality(solution.quality());
+        //System.out.println(solution.quality());
+        //System.out.println(solution.value());
+    }
+
+    public void printPopulation(String[][] population) {
         for(String pop[] : population) {
             System.out.println("elem:" + pop[0]);
             System.out.println("fitness: " + pop[1]);
         }
     }
 
-    public static Map<String, String[][]> init() {
-        Map<String, String[][]> map = new HashMap<>();
+    private final int ID = 0, ARGS = 1;
 
-        String[][] test = {
-                {"con([1,2,3],1)", "true"},
-                {"con([0],0)", "true"},
-                {"con([1, 2],0)", "false"},
-                {"con([8,7,6,5],5)", "true"},
-                {"con([1,4,7],3)", "false"},
-                {"con([5],4)", "false"},
-                {"con([10],11)", "false"},
-                {"con([1,2,3,4,5,6,7,8,9],3)", "true"},
-                {"con([2,4,6,8,10],3)", "false"}
-        };
-        String[][] examplesgeq = {
-                {"geq(0,1)", "false"},
-                {"geq(0,0)", "true"},
-                {"geq(1,0)", "true"},
-                {"geq(1,1)", "true"},
-                {"geq(1,2)", "false"},
-                {"geq(2,1)", "true"},
-                {"geq(2,5)", "false"},
-                {"geq(5,2)", "true"},
-                {"geq(3,3)", "true"}
-        };
-        String[][] examplesleq = {
-                {"leq(0,1)", "true"},
-                {"leq(0,0)", "true"},
-                {"leq(1,0)", "false"},
-                {"leq(1,1)", "true"},
-                {"leq(1,2)", "true"},
-                {"lgeq(2,1)", "false"},
-                {"leq(2,5)", "true"},
-                {"leq(5,2)", "false"},
-                {"leq(3,3)", "true"}
-        };
-        String[][] exampleslt = {
-                {"lt(0,1)", "true"},
-                {"lt(0,0)", "false"},
-                {"lt(1,0)", "false"},
-                {"lt(1,1)", "false"},
-                {"lt(1,2)", "true"},
-                {"lt(2,1)", "false"},
-                {"lt(2,5)", "true"},
-                {"lt(5,2)", "flase"},
-                {"lt(3,3)", "false"}
-        };
-        String[][] examplesgt = {
-                {"gt(0,1)", "false"},
-                {"gt(0,0)", "false"},
-                {"gt(1,0)", "true"},
-                {"gt(1,1)", "false"},
-                {"gt(1,2)", "false"},
-                {"gt(2,1)", "true"},
-                {"gt(2,5)", "false"},
-                {"gt(5,2)", "true"},
-                {"gt(3,3)", "false"}
-        };
-        String[][] examplesand = {
-                {"and(0,1)", "false"},
-                {"and(0,0)", "false"},
-                {"and(1,0)", "flase"},
-                {"and(1,1)", "true"}
-        };
-        String[][] examplesor = {
-                {"or(0,1)", "true"},
-                {"or(0,0)", "false"},
-                {"or(1,0)", "true"},
-                {"or(1,1)", "true"}
-        };
-        String[][] examplesxor = {
-                {"xor(0,1)", "true"},
-                {"xor(0,0)", "false"},
-                {"xor(1,0)", "true"},
-                {"xor(1,1)", "false"}
-        };
-        map.put("geq", examplesgeq);
-        map.put("leq", examplesleq);
-        map.put("lt", exampleslt);
-        map.put("gt", examplesgt);
-        map.put("and", examplesand);
-        map.put("or", examplesor);
-        map.put("xor", examplesxor);
-        map.put("con", test);
-
-        return map;
-    }
-
-    private static final int ID = 0, ARGS = 1;
-
-    public static int getType(String element) {
+    public int getType(String element) {
         if(element.matches("[0-9]+")) return EquationSystem.INTEGER;
         else if(element.matches("false|true")) return EquationSystem.BOOLEAN;
         else if(element.startsWith("[")) return EquationSystem.LIST;
         return -1;
+    }
+
+    public String[][] getPopulation() {
+        return population;
+    }
+
+    public void setPopulation(String[][] population) {
+        this.population = population;
+    }
+
+    public EquationSystem getSolution() {
+        return solution;
+    }
+
+    public void setSolution(EquationSystem solution) {
+        this.solution = solution;
+    }
+
+    public double getQuality() {
+        return quality;
+    }
+
+    public void setQuality(double quality) {
+        this.quality = quality;
+    }
+
+    /**
+     * @return the tournament
+     */
+    public boolean isTournament() {
+        return tournament;
+    }
+
+    /**
+     * @param tournament the tournament to set
+     */
+    public void setTournament(boolean tournament) {
+        this.tournament = tournament;
+    }
+
+    /**
+     * @return the iterations
+     */
+    public int getIterations() {
+        return iterations;
+    }
+
+    /**
+     * @param iterations the iterations to set
+     */
+    public void setIterations(int iterations) {
+        this.iterations = iterations;
+    }
+
+    /**
+     * @return the populationSize
+     */
+    public int getPopulationSize() {
+        return populationSize;
+    }
+
+    /**
+     * @param populationSize the populationSize to set
+     */
+    public void setPopulationSize(int populationSize) {
+        this.populationSize = populationSize;
     }
 }

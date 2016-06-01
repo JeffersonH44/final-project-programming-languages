@@ -1,6 +1,8 @@
 .idea
 out
 *.class
+build.xml
+manifest.mf
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -9,3 +11,5 @@ out
 hs_err_pid*
 
 Proyecto.pdf
+/build/
+/nbproject
